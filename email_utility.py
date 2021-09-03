@@ -11,17 +11,38 @@ import smtplib
 
 
 class EmailUtility:
-    # Set class attributes
-    SMTP_SERVER = 'smtp.gmail.com'
-    SMTP_PORT = 587
     DATE_FORMAT = '%#I:%M %p'
     EMAIL_SPACE = ', '
 
     def __init__(self):
         self.SMTP_USERNAME = None
         self.SMTP_PASSWORD = None
+        self.MAIL_SERVER = None
+        self.SMTP_PORT = 587
+        self.LOGIN_HELP_MESSAGE = None
         self.mail = None
 
+        # Get mail SMTP settings
+        print('What email would you like to use?')
+        print('1. Gmail')
+        print('2. Outlook/Hotmail/Live/MSN')
+        while True:
+            response = input('Enter the number here: ')
+            print()
+
+            if response == '1':
+                self.SMTP_SERVER = 'smtp.gmail.com'
+                self.MAIL_SERVER = 'Gmail'
+                self.LOGIN_HELP_MESSAGE = '*** Make sure to turn on "Allow less secure apps" (https://myaccount.google.com/lesssecureapps) ***'
+                break
+            elif response == '2':
+                self.SMTP_SERVER = 'smtp-mail.outlook.com'
+                self.MAIL_SERVER = 'Outlook/Hotmail/Live/MSN'
+                break
+            else:
+                print('Not a valid option. Please try again.')
+
+        # Attempt login
         while True:
             if self.smtp_login():
                 break
@@ -31,14 +52,17 @@ class EmailUtility:
         self.EMAIL_FROM = self.SMTP_USERNAME
 
     def smtp_login(self):
-        print('*** Make sure to turn on "Allow less secure apps" (https://myaccount.google.com/lesssecureapps) ***')
+        """Attempt to log into mail server with user provided credentials"""
+        # Show login help message if there is one
+        if self.LOGIN_HELP_MESSAGE:
+            print('*** Make sure to turn on "Allow less secure apps" (https://myaccount.google.com/lesssecureapps) ***')
 
         # Get Gmail address
-        email_address = input('Gmail username: ')
+        email_address = input(f'{self.MAIL_SERVER} username: ')
         self.SMTP_USERNAME = email_address
 
         # Get Gmail password without it showing in terminal
-        password = getpass('Gmail password (no echo): ')
+        password = getpass(f'{self.MAIL_SERVER} password (no echo): ')
         self.SMTP_PASSWORD = password
 
         # Attempt to sign in
@@ -46,7 +70,7 @@ class EmailUtility:
             self.mail = smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT)
             self.mail.starttls()
             self.mail.login(self.SMTP_USERNAME, self.SMTP_PASSWORD)
-            print('Gmail login successful.\n')
+            print(f'{self.MAIL_SERVER} login successful.\n')
             return True
         except smtplib.SMTPAuthenticationError:
             print('There was an SMTP authentication error. Please try again. \n')
