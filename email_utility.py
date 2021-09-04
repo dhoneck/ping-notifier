@@ -26,6 +26,7 @@ class EmailUtility:
         print('What email would you like to use?')
         print('1. Gmail')
         print('2. Outlook/Hotmail/Live/MSN')
+        print('3. Yahoo')
         while True:
             response = input('Enter the number here: ')
             print()
@@ -33,11 +34,19 @@ class EmailUtility:
             if response == '1':
                 self.SMTP_SERVER = 'smtp.gmail.com'
                 self.MAIL_SERVER = 'Gmail'
-                self.LOGIN_HELP_MESSAGE = '*** Make sure to turn on "Allow less secure apps" (https://myaccount.google.com/lesssecureapps) ***'
+                self.LOGIN_HELP_MESSAGE = '*** Make sure to turn on "Allow less secure apps" (' \
+                                          'https://myaccount.google.com/lesssecureapps) *** '
                 break
             elif response == '2':
                 self.SMTP_SERVER = 'smtp-mail.outlook.com'
                 self.MAIL_SERVER = 'Outlook/Hotmail/Live/MSN'
+                break
+            elif response == '3':
+                self.SMTP_SERVER = 'smtp.mail.yahoo.com'
+                self.MAIL_SERVER = 'Yahoo'
+                self.SMTP_PORT = 465
+                self.LOGIN_HELP_MESSAGE = '*** Make sure to generate an app password (' \
+                                          'https://login.yahoo.com/myaccount/security/app-password) *** '
                 break
             else:
                 print('Not a valid option. Please try again.')
@@ -55,7 +64,7 @@ class EmailUtility:
         """Attempt to log into mail server with user provided credentials"""
         # Show login help message if there is one
         if self.LOGIN_HELP_MESSAGE:
-            print('*** Make sure to turn on "Allow less secure apps" (https://myaccount.google.com/lesssecureapps) ***')
+            print(self.LOGIN_HELP_MESSAGE)
 
         # Get Gmail address
         email_address = input(f'{self.MAIL_SERVER} username: ')
@@ -67,13 +76,23 @@ class EmailUtility:
 
         # Attempt to sign in
         try:
-            self.mail = smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT)
-            self.mail.starttls()
+            if self.MAIL_SERVER == 'Yahoo':
+                self.mail = smtplib.SMTP_SSL(self.SMTP_SERVER, self.SMTP_PORT)
+                self.mail.ehlo()
+            else:
+                self.mail = smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT)
+                self.mail.starttls()
+
             self.mail.login(self.SMTP_USERNAME, self.SMTP_PASSWORD)
             print(f'{self.MAIL_SERVER} login successful.\n')
             return True
         except smtplib.SMTPAuthenticationError:
             print('There was an SMTP authentication error. Please try again. \n')
+        except smtplib.SMTPConnectError:
+            print('There was an SMTP connection error. Please try again. \n')
+        except Exception as err:
+            print(f'There was an error: {err}')
+            print('Please try again. \n')
         return False
 
     def send_email(self, host):

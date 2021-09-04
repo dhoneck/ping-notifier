@@ -106,7 +106,7 @@ class PingNotifier(object):
                                 print(host + ' is up. Will attempt to send an email notification.')
                                 email_util.send_email(host)
                                 self.offline_hosts.remove(host)
-                        time.sleep(15)
+                        time.sleep(10)
                     email_util.quit_smtp_session()
                     print()
                     break
